@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Orçamento</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #e6e6e6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+        .btn-custom {
+            background-color: #4B004B;
+            color: #fff;
+        }
+        .btn-custom:hover {
+            background-color: #350035;
+        }
+        h1 {
+            font-size: 20px;
+            color: #4B004B;
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="logouniondesign.png" alt="Logo Union Design" class="logo">
+        <h1>Gerador de Orçamento</h1>
+        <form id="form-orcamento">
+            <div class="form-group">
+                <label>Escolha o serviço:</label><br>
+                <input type="checkbox" name="servico" value="basico" data-valor="100"> Pacote Básico<br>
+                <input type="checkbox" name="servico" value="Quarto" data-valor="250"> Quarto<br>
+                <input type="checkbox" name="servico" value="Sala" data-valor="300"> Sala<br>
+                <input type="checkbox" name="servico" value="Cozinha" data-valor="400"> Cozinha<br>
+                <input type="checkbox" name="servico" value="Área Gourmet" data-valor="500"> Área Gourmet<br>
+                <input type="checkbox" name="servico" value="Banheiro" data-valor="200"> Banheiro<br>
+                <input type="checkbox" name="servico" value="Fachada" data-valor="500"> Fachada<br>
+                <input type="checkbox" name="servico" value="comercial EX: Salão principal e um banheiro" data-valor="600"> comercial EX: Salão principal e um banheiro<br>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="cliente" placeholder="Nome do cliente" required>
+            </div>
+            <div class="form-group">
+                <input type="tel" class="form-control" id="telefone" placeholder="Telefone" required>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="cidade" placeholder="Cidade" required>
+            </div>
+            <div class="form-group">
+                <input type="date" class="form-control" id="data" required>
+            </div>
+            <button type="button" class="btn btn-custom btn-block" onclick="gerarPDF()">Gerar Orçamento</button>
+        </form>        
+    </div>
+<script>
+   async function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+    });
+
+    // Configurações do estilo
+    const corPrimaria = "#4B004B";
+    const fontePrimaria = "Helvetica";
+
+    // Dados do formulário
+    const cliente = document.getElementById("cliente").value;
+    const telefone = document.getElementById("telefone").value;
+    const cidade = document.getElementById("cidade").value;
+    const data = document.getElementById("data").value;
+
+    // Serviços selecionados
+    const servicos = document.querySelectorAll('input[name="servico"]:checked');
+    let total = 0;
+    const listaServicos = [];
+
+    servicos.forEach((servico) => {
+        const nome = servico.value;
+        const valor = parseFloat(servico.dataset.valor);
+        total += valor;
+        listaServicos.push({ nome, valor });
+    });
+
+    // Adicionar plano de fundo
+    const img = new Image();
+    img.src = "Sem título.jpg"; // Atualize para o caminho correto
+    img.crossOrigin = "Anonymous"; // Necessário para evitar problemas de CORS
+
+    const logotipo = new Image();
+    logotipo.src = "logouniondesign.png"; // Caminho do arquivo do logotipo
+    logotipo.crossOrigin = "Anonymous";
+
+    img.onload = function () {
+        // Adiciona a imagem como plano de fundo
+        pdf.addImage(img, "JPEG", 0, 0, 210, 297);
+        pdf.addImage(logotipo, "PNG", 10, 10, 30, 30); // Posição (10,10) e tamanho (30x30 mm)
+
+        // Conteúdo do PDF
+        // Cabeçalho
+        pdf.setFont(fontePrimaria, "bold");
+        pdf.setTextColor(corPrimaria);
+        pdf.setFontSize(18);
+        pdf.text("Proposta e Orçamento", 105, 30, null, null, "center");
+
+        // Informações do Cliente
+        pdf.setFontSize(12);
+        pdf.setTextColor("#000000");
+        pdf.text(`Cliente: ${cliente}`, 10, 50);
+        pdf.text(`Cidade: ${cidade}`, 10, 60);
+        pdf.text(`Telefone: ${telefone}`, 10, 70);
+        pdf.text(`Data: ${data}`, 10, 80);
+
+        // Tabela de Serviços
+        pdf.setFontSize(14);
+        pdf.setTextColor(corPrimaria);
+        pdf.text("Serviços Selecionados:", 10, 95);
+
+        let yPosition = 105;
+        pdf.setFontSize(12);
+        pdf.setDrawColor(0); // Cor da linha preta
+        pdf.setLineWidth(0.5);
+        pdf.line(10, yPosition, 200, yPosition); // Linha de cima da tabela
+
+        yPosition += 10;
+        pdf.text("Serviço", 15, yPosition);
+        pdf.text("Preço", 170, yPosition, null, null, "right");
+        pdf.line(10, yPosition + 2, 200, yPosition + 2); // Linha abaixo dos títulos
+
+        listaServicos.forEach((servico) => {
+            yPosition += 10;
+            pdf.text(servico.nome, 15, yPosition);
+            pdf.text(`R$ ${servico.valor.toFixed(2)}`, 170, yPosition, null, null, "right");
+            pdf.line(10, yPosition + 2, 200, yPosition + 2); // Linha abaixo de cada serviço
+        });
+
+        // Total
+        yPosition += 10;
+        pdf.setFont(fontePrimaria, "bold");
+        pdf.text("Total:", 15, yPosition);
+        pdf.text(`R$ ${total.toFixed(2)}`, 170, yPosition, null, null, "right");
+
+        // Rodapé
+        pdf.setFontSize(10);
+        pdf.setTextColor("#000000");
+        pdf.text(
+            "Union Design - Contato: (XX) XXXX-XXXX - E-mail: contato@uniondesign.com",
+            10,
+            280
+        );
+
+        // Salvar o PDF
+        pdf.save(`orcamento_${cliente}.pdf`);
+    };
+}
+    </script>
+    
+</body>
+</html>
